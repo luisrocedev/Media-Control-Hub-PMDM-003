@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Media Control Hub · PMDM 003</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+  </head>
+  <body>
+    <main class="layout">
+      <section class="panel player-panel">
+        <h1>Media Control Hub</h1>
+        <p class="subtitle">Reproductor personalizado con trazabilidad de sesiones</p>
+
+        <div class="auth-row">
+          <input id="operatorName" type="text" placeholder="Nombre" />
+          <input id="operatorDni" type="text" placeholder="DNI" value="53945291X" />
+          <button id="btnRegister">Registrar operador</button>
+        </div>
+
+        <div class="media-stage">
+          <video id="videoPlayer" playsinline preload="metadata"></video>
+          <audio id="audioPlayer" preload="metadata"></audio>
+          <div id="nowPlaying">Selecciona un contenido de la biblioteca</div>
+        </div>
+
+        <div class="controls-grid">
+          <button id="btnPlay">▶ Reproducir</button>
+          <button id="btnPause">⏸ Pausar</button>
+          <button id="btnStop">⏹ Detener</button>
+          <button id="btnBack">⏪ -10s</button>
+          <button id="btnForward">⏩ +10s</button>
+          <label>Velocidad
+            <select id="speed">
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+            </select>
+          </label>
+          <label>Volumen
+            <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" />
+          </label>
+          <label>Posición
+            <input id="seek" type="range" min="0" max="100" value="0" />
+          </label>
+          <span id="timeInfo">00:00 / 00:00</span>
+        </div>
+      </section>
+
+      <section class="panel data-panel">
+        <h2>Biblioteca</h2>
+        <form id="mediaForm" class="media-form">
+          <input name="title" type="text" placeholder="Título" required />
+          <select name="kind">
+            <option value="audio">Audio</option>
+            <option value="video">Vídeo</option>
+          </select>
+          <input name="sourceUrl" type="url" placeholder="URL fuente" required />
+          <input name="durationSeconds" type="number" min="0" placeholder="Duración (s)" />
+          <input name="genre" type="text" placeholder="Género" />
+          <button type="submit">Añadir medio</button>
+        </form>
+
+        <div id="library"></div>
+
+        <h2>Métricas</h2>
+        <div id="stats" class="kpis"></div>
+
+        <h2>Ranking</h2>
+        <div id="leaders"></div>
+
+        <h2>Historial operador</h2>
+        <div id="history"></div>
+      </section>
+    </main>
+
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>

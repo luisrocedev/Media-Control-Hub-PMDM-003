@@ -1,0 +1,148 @@
+:root {
+  color-scheme: dark;
+  --bg: #0f1222;
+  --card: #181d34;
+  --card-2: #212742;
+  --text: #e7ebff;
+  --muted: #95a0d4;
+  --accent: #4de2c4;
+  --accent-2: #58a6ff;
+  --danger: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at top, #1a2050, var(--bg) 50%);
+  color: var(--text);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 18px;
+  padding: 18px;
+  min-height: 100vh;
+}
+
+.panel {
+  background: linear-gradient(160deg, var(--card), var(--card-2));
+  border: 1px solid #2f3558;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.subtitle { color: var(--muted); margin-top: -8px; }
+
+.auth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.media-stage {
+  border-radius: 12px;
+  border: 1px solid #364170;
+  background: #0a0d1d;
+  padding: 10px;
+}
+
+video, audio {
+  width: 100%;
+  border-radius: 10px;
+  background: #000;
+}
+
+audio { display: none; }
+
+#nowPlaying {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.controls-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+button, input, select {
+  border: 1px solid #3a4474;
+  border-radius: 8px;
+  padding: 8px;
+  background: #121833;
+  color: var(--text);
+}
+
+button {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover { border-color: var(--accent-2); }
+
+.media-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.media-form button { grid-column: span 2; background: #123d44; border-color: #1f7f8d; }
+
+.list {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+.list td, .list th {
+  border-bottom: 1px solid #2f3558;
+  padding: 6px;
+  font-size: 13px;
+}
+
+.list th { color: var(--muted); text-align: left; }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.kpi {
+  border: 1px solid #2f3558;
+  border-radius: 10px;
+  padding: 8px;
+  background: #111730;
+}
+
+.kpi strong {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.kpi span {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.status-ok { color: var(--accent); }
+.status-warn { color: #ffd166; }
+.status-stop { color: var(--danger); }
+
+@media (max-width: 1024px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
   </head>
   <body>
+    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
+    <div id="toastBox"></div>
+
     <main class="layout">
       <section class="panel player-panel">
         <h1>Media Control Hub</h1>
@@ -21,8 +24,13 @@
         <div class="media-stage">
           <video id="videoPlayer" playsinline preload="metadata"></video>
           <audio id="audioPlayer" preload="metadata"></audio>
-          <div id="nowPlaying">Selecciona un contenido de la biblioteca</div>
+          <div id="nowPlaying"><span class="playing-dot" id="playingDot"></span>Selecciona un contenido de la biblioteca</div>
         </div>
+
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span id="timeInfo" style="font-size:var(--fs-xs);color:var(--muted);">00:00 / 00:00</span>
 
         <div class="controls-grid">
           <button id="btnPlay">▶ Reproducir</button>
@@ -41,15 +49,13 @@
           <label>Volumen
             <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8" />
           </label>
-          <label>Posición
-            <input id="seek" type="range" min="0" max="100" value="0" />
-          </label>
-          <span id="timeInfo">00:00 / 00:00</span>
         </div>
+
+        <p class="shortcuts-hint"><kbd>Espacio</kbd> play/pausa · <kbd>←</kbd><kbd>→</kbd> ±5s · <kbd>↑</kbd><kbd>↓</kbd> volumen</p>
       </section>
 
       <section class="panel data-panel">
-        <h2>Biblioteca</h2>
+        <h2>📂 Biblioteca</h2>
         <form id="mediaForm" class="media-form">
           <input name="title" type="text" placeholder="Título" required />
           <select name="kind">
@@ -64,13 +70,20 @@
 
         <div id="library"></div>
 
-        <h2>Métricas</h2>
+        <div class="data-actions">
+          <button class="btn-seed" id="seedBtn">🌱 Seed</button>
+          <button class="btn-export" id="exportBtn">📥 Exportar</button>
+          <button class="btn-import" id="importBtn">📤 Importar</button>
+        </div>
+        <input type="file" id="importFile" accept=".json" hidden />
+
+        <h2>📊 Métricas</h2>
         <div id="stats" class="kpis"></div>
 
-        <h2>Ranking</h2>
+        <h2>🏆 Ranking</h2>
         <div id="leaders"></div>
 
-        <h2>Historial operador</h2>
+        <h2>📜 Historial operador</h2>
         <div id="history"></div>
       </section>
     </main>

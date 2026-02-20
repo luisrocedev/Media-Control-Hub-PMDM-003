@@ -19,13 +19,22 @@ const el = {
   btnForward: document.getElementById("btnForward"),
   speed: document.getElementById("speed"),
   volume: document.getElementById("volume"),
-  seek: document.getElementById("seek"),
   timeInfo: document.getElementById("timeInfo"),
   library: document.getElementById("library"),
   stats: document.getElementById("stats"),
   leaders: document.getElementById("leaders"),
   history: document.getElementById("history"),
   mediaForm: document.getElementById("mediaForm"),
+  /* v2 refs */
+  toastBox: document.getElementById("toastBox"),
+  playingDot: document.getElementById("playingDot"),
+  progressBar: document.getElementById("progressBar"),
+  progressFill: document.getElementById("progressFill"),
+  themeToggle: document.getElementById("themeToggle"),
+  seedBtn: document.getElementById("seedBtn"),
+  exportBtn: document.getElementById("exportBtn"),
+  importBtn: document.getElementById("importBtn"),
+  importFile: document.getElementById("importFile"),
 };
 
 function activePlayer() {
@@ -55,6 +64,35 @@ async function api(path, options = {}) {
   return data;
 }
 
+/* ─── v2 Utility functions ─── */
+
+function showToast(msg, type = 'info') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  el.toastBox.appendChild(t);
+  t.addEventListener('animationend', () => t.remove());
+}
+
+function setPlayingDot(active) {
+  el.playingDot.classList.toggle('active', active);
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('mch-theme');
+  if (saved === 'light') {
+    document.documentElement.classList.add('light');
+    el.themeToggle.textContent = '☀️';
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.documentElement.classList.toggle('light');
+  localStorage.setItem('mch-theme', isLight ? 'light' : 'dark');
+  el.themeToggle.textContent = isLight ? '☀️' : '🌙';
+  showToast(`Tema ${isLight ? 'claro' : 'oscuro'} activado`, 'info');
+}
+
 async function registerOperator() {
   const name = el.operatorName.value.trim();
   const dni = el.operatorDni.value.trim();
@@ -65,7 +103,8 @@ async function registerOperator() {
 
   state.operatorId = data.operatorId;
   state.operatorName = data.name;
-  el.nowPlaying.textContent = `Operador activo: ${data.name} (${data.dni})`;
+  el.nowPlaying.innerHTML = `<span class="playing-dot" id="playingDot"></span>Operador activo: ${data.name} (${data.dni})`;
+  showToast(`✅ Operador ${data.name} registrado`, 'ok');
   await refreshStats();
   await refreshLeaders();
   await refreshHistory();
@@ -82,7 +121,7 @@ function renderLibrary(items) {
       (item) => `
       <tr>
         <td>${item.title}</td>
-        <td>${item.kind}</td>
+        <td><span class="badge-kind ${item.kind}">${item.kind === 'audio' ? '🎵' : '🎥'} ${item.kind}</span></td>
         <td>${item.genre || "General"}</td>
         <td>${item.duration_seconds || 0}s</td>
         <td><button data-play='${item.id}'>Cargar</button></td>
@@ -131,14 +170,19 @@ function bindProgressEvents(player) {
     const duration = player.duration || 0;
     const current = player.currentTime || 0;
     const pct = duration > 0 ? (current / duration) * 100 : 0;
-    el.seek.value = `${pct}`;
+    el.progressFill.style.width = `${pct}%`;
     el.timeInfo.textContent = `${formatTime(current)} / ${formatTime(duration)}`;
   });
 
+  player.addEventListener("play", () => setPlayingDot(true));
+  player.addEventListener("pause", () => setPlayingDot(false));
+
   player.addEventListener("ended", async () => {
+    setPlayingDot(false);
     await endSession(true);
     await pushEvent("ended", { ended: true });
-    el.nowPlaying.textContent = "Reproducción completada";
+    el.nowPlaying.innerHTML = `<span class="playing-dot" id="playingDot"></span>Reproducción completada`;
+    showToast('🎬 Reproducción completada', 'ok');
     await refreshStats();
     await refreshLeaders();
     await refreshHistory();
@@ -161,7 +205,8 @@ async function loadMedia(item) {
   const player = activePlayer();
   player.src = item.source_url;
   player.load();
-  el.nowPlaying.textContent = `Cargado: ${item.title} [${item.kind}]`;
+  el.nowPlaying.innerHTML = `<span class="playing-dot" id="playingDot"></span>Cargado: ${item.title} [${item.kind}]`;
+  showToast(`📀 ${item.title} cargado`, 'info');
 
   if (state.operatorId) {
     const session = await api("/api/sessions/start", {
@@ -225,20 +270,27 @@ async function refreshLeaders() {
 
   const rows = data.leaders
     .map(
-      (row) => `
+      (row, idx) => {
+        const badges = ['gold', 'silver', 'bronze'];
+        const rank = idx < 3
+          ? `<span class="rank-badge ${badges[idx]}">${idx + 1}</span>`
+          : `${idx + 1}`;
+        return `
       <tr>
+        <td>${rank}</td>
         <td>${row.name}</td>
         <td>${row.total_sessions}</td>
         <td>${row.completions}</td>
         <td>${row.avg_position}</td>
       </tr>
-    `
+    `;
+      }
     )
     .join("");
 
   el.leaders.innerHTML = `
     <table class='list'>
-      <thead><tr><th>Operador</th><th>Sesiones</th><th>Completadas</th><th>Avg Pos.</th></tr></thead>
+      <thead><tr><th>#</th><th>Operador</th><th>Sesiones</th><th>Completadas</th><th>Avg Pos.</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
   `;
@@ -258,15 +310,20 @@ async function refreshHistory() {
 
   const rows = data.sessions
     .map(
-      (session) => `
+      (session) => {
+        const comp = session.completed
+          ? '<span class="badge-completed yes">✔ Sí</span>'
+          : '<span class="badge-completed no">✘ No</span>';
+        return `
       <tr>
         <td>${session.title}</td>
-        <td>${session.kind}</td>
+        <td><span class="badge-kind ${session.kind}">${session.kind === 'audio' ? '🎵' : '🎥'} ${session.kind}</span></td>
         <td>${session.genre}</td>
-        <td>${session.completed ? "Sí" : "No"}</td>
+        <td>${comp}</td>
         <td>${Number(session.last_position).toFixed(2)}s</td>
       </tr>
-    `
+    `;
+      }
     )
     .join("");
 
@@ -280,29 +337,36 @@ async function refreshHistory() {
 
 async function play() {
   if (!state.currentMedia) {
-    el.nowPlaying.textContent = "Primero carga un elemento de la biblioteca.";
+    showToast('⚠️ Carga un medio primero', 'warning');
     return;
   }
   const player = activePlayer();
   await player.play();
+  setPlayingDot(true);
   await pushEvent("play", { rate: player.playbackRate, volume: player.volume });
-  el.nowPlaying.textContent = "Estado: reproduciendo";
+  el.nowPlaying.innerHTML = `<span class="playing-dot active" id="playingDot"></span>▶ ${state.currentMedia.title}`;
+  showToast('▶ Reproduciendo', 'ok');
 }
 
 async function pause() {
   const player = activePlayer();
   player.pause();
+  setPlayingDot(false);
   await pushEvent("pause", {});
-  el.nowPlaying.textContent = "Estado: pausa";
+  el.nowPlaying.innerHTML = `<span class="playing-dot" id="playingDot"></span>⏸ Pausa: ${state.currentMedia?.title || ''}`;
+  showToast('⏸ Pausado', 'info');
 }
 
 async function stop() {
   const player = activePlayer();
   player.pause();
   player.currentTime = 0;
+  setPlayingDot(false);
+  el.progressFill.style.width = '0%';
   await pushEvent("stop", {});
   await endSession(false);
-  el.nowPlaying.textContent = "Estado: detenido";
+  el.nowPlaying.innerHTML = '<span class="playing-dot" id="playingDot"></span>⏹ Detenido';
+  showToast('⏹ Detenido', 'info');
   await refreshStats();
   await refreshLeaders();
   await refreshHistory();
@@ -333,6 +397,7 @@ function wireEvents() {
     const player = activePlayer();
     player.playbackRate = Number(el.speed.value);
     await pushEvent("speed", { value: player.playbackRate });
+    showToast(`⚡ Velocidad: ${player.playbackRate}x`, 'info');
   });
 
   el.volume.addEventListener("input", async () => {
@@ -341,12 +406,52 @@ function wireEvents() {
     await pushEvent("volume", { value: player.volume });
   });
 
-  el.seek.addEventListener("input", async () => {
+  /* v2 — progress bar click-to-seek */
+  el.progressBar.addEventListener("click", async (e) => {
     const player = activePlayer();
-    const duration = player.duration || 0;
-    player.currentTime = (Number(el.seek.value) / 100) * duration;
+    const rect = el.progressBar.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    player.currentTime = pct * (player.duration || 0);
     await pushEvent("seek", { absolute: player.currentTime });
   });
+
+  /* v2 — theme toggle */
+  el.themeToggle.addEventListener("click", toggleTheme);
+
+  /* v2 — keyboard shortcuts */
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.code) {
+      case 'Space':
+        e.preventDefault();
+        activePlayer().paused ? play().catch(console.error) : pause().catch(console.error);
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        skip(-5).catch(console.error);
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        skip(5).catch(console.error);
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        el.volume.value = Math.min(1, Number(el.volume.value) + 0.05).toFixed(2);
+        el.volume.dispatchEvent(new Event('input'));
+        break;
+      case 'ArrowDown':
+        e.preventDefault();
+        el.volume.value = Math.max(0, Number(el.volume.value) - 0.05).toFixed(2);
+        el.volume.dispatchEvent(new Event('input'));
+        break;
+    }
+  });
+
+  /* v2 — seed / export / import */
+  el.seedBtn.addEventListener("click", () => seedData().catch(console.error));
+  el.exportBtn.addEventListener("click", () => exportData().catch(console.error));
+  el.importBtn.addEventListener("click", () => el.importFile.click());
+  el.importFile.addEventListener("change", () => importData().catch(console.error));
 
   el.mediaForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -367,14 +472,53 @@ function wireEvents() {
       el.mediaForm.reset();
       await refreshLibrary();
       await refreshStats();
-      el.nowPlaying.textContent = "Medio añadido correctamente";
+      showToast('✅ Medio añadido', 'ok');
     } catch (error) {
-      el.nowPlaying.textContent = `Error al añadir medio: ${error.message}`;
+      showToast(`❌ ${error.message}`, 'danger');
     }
   });
 }
 
+/* ─── v2 Data functions ─── */
+
+async function seedData() {
+  await api('/api/seed', { method: 'POST' });
+  showToast('🌱 Datos demo generados', 'ok');
+  await refreshLibrary();
+  await refreshStats();
+  await refreshLeaders();
+}
+
+async function exportData() {
+  const data = await api('/api/stats');
+  const media = await api('/api/media');
+  const blob = new Blob([JSON.stringify({ stats: data.stats, media: media.items }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `media-control-export-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('📥 Datos exportados', 'ok');
+}
+
+async function importData() {
+  const file = el.importFile.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const json = JSON.parse(text);
+  if (json.media && Array.isArray(json.media)) {
+    await api('/api/import', { method: 'POST', body: JSON.stringify({ media: json.media }) });
+    showToast(`📤 ${json.media.length} medios importados`, 'ok');
+    await refreshLibrary();
+    await refreshStats();
+  } else {
+    showToast('⚠️ Formato inválido', 'warning');
+  }
+  el.importFile.value = '';
+}
+
 async function boot() {
+  initTheme();
   wireEvents();
   await refreshLibrary();
   await refreshStats();
@@ -383,5 +527,5 @@ async function boot() {
 }
 
 boot().catch((error) => {
-  el.nowPlaying.textContent = `Error de inicialización: ${error.message}`;
+  showToast(`❌ Error: ${error.message}`, 'danger');
 });

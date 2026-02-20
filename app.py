@@ -1,4 +1,5 @@
 import json
+import random
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -283,6 +284,93 @@ def stats():
 @app.get("/api/health")
 def health():
     return jsonify({"ok": True, "db": DB_PATH.name, "utc": now_iso()})
+
+
+# ─── v2 endpoints ───
+
+
+@app.post("/api/seed")
+def seed_demo():
+    """Generate demo operators, extra media and random sessions."""
+    demo_operators = ["Ana Demo", "Carlos Test", "Lucía QA"]
+    demo_media = [
+        ("Sinfonía Alfa", "audio", "https://samplelib.com/lib/preview/mp3/sample-9s.mp3", 9, "Clásica"),
+        ("Clip Beta", "video", "https://samplelib.com/lib/preview/mp4/sample-15s.mp4", 15, "Documental"),
+    ]
+
+    with get_db() as conn:
+        # Ensure base media exists
+        seed_media(conn)
+
+        # Insert demo operators
+        op_ids: list[int] = []
+        for name in demo_operators:
+            cur = conn.execute(
+                "INSERT INTO operators (name, dni, created_at) VALUES (?, ?, ?)",
+                (name, f"DEMO-{random.randint(1000,9999)}", now_iso()),
+            )
+            op_ids.append(cur.lastrowid)
+
+        # Extra media
+        for title, kind, url, dur, genre in demo_media:
+            conn.execute(
+                "INSERT INTO media_items (title, kind, source_url, duration_seconds, genre, created_at) VALUES (?,?,?,?,?,?)",
+                (title, kind, url, dur, genre, now_iso()),
+            )
+
+        # Fetch all media ids
+        media_ids = [r["id"] for r in conn.execute("SELECT id FROM media_items").fetchall()]
+
+        # Random sessions
+        for op_id in op_ids:
+            for _ in range(random.randint(2, 5)):
+                mid = random.choice(media_ids)
+                completed = random.choice([0, 1])
+                pos = round(random.uniform(0, 30), 2)
+                cur = conn.execute(
+                    "INSERT INTO playback_sessions (operator_id, media_item_id, started_at, ended_at, last_position, completed) VALUES (?,?,?,?,?,?)",
+                    (op_id, mid, now_iso(), now_iso(), pos, completed),
+                )
+                sid = cur.lastrowid
+                for evt in ("play", "pause", "stop"):
+                    conn.execute(
+                        "INSERT INTO playback_events (session_id, event_type, position, payload_json, created_at) VALUES (?,?,?,?,?)",
+                        (sid, evt, round(random.uniform(0, pos), 2), "{}", now_iso()),
+                    )
+
+    return jsonify({"ok": True, "message": "Demo data seeded."})
+
+
+@app.post("/api/import")
+def import_data():
+    """Re-insert media items from a JSON export."""
+    body = request.get_json(silent=True) or {}
+    items = body.get("media", [])
+    if not isinstance(items, list):
+        return jsonify({"ok": False, "error": "Se esperaba una lista de medios."}), 400
+
+    inserted = 0
+    with get_db() as conn:
+        for item in items:
+            title = str(item.get("title", "")).strip()
+            kind = str(item.get("kind", "")).strip().lower()
+            source_url = str(item.get("source_url", "")).strip()
+            if not title or kind not in {"audio", "video"} or not source_url:
+                continue
+            conn.execute(
+                "INSERT INTO media_items (title, kind, source_url, duration_seconds, genre, created_at) VALUES (?,?,?,?,?,?)",
+                (
+                    title,
+                    kind,
+                    source_url,
+                    int(item.get("duration_seconds", 0) or 0),
+                    str(item.get("genre", "General")).strip() or "General",
+                    now_iso(),
+                ),
+            )
+            inserted += 1
+
+    return jsonify({"ok": True, "imported": inserted})
 
 
 if __name__ == "__main__":

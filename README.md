@@ -6,12 +6,12 @@ Reproductor multimedia personalizado (audio / vídeo) con controles HTML5 nativo
 
 ## Stack tecnológico
 
-| Capa | Tecnología |
-|------|-----------|
-| Frontend | HTML 5 `<video>` / `<audio>`, CSS custom-properties, JavaScript vanilla |
-| Backend | Python 3 · Flask 3.0 |
-| Base de datos | SQLite 3 (file: `media_control.sqlite3`) |
-| Puerto | `5070` |
+| Capa          | Tecnología                                                              |
+| ------------- | ----------------------------------------------------------------------- |
+| Frontend      | HTML 5 `<video>` / `<audio>`, CSS custom-properties, JavaScript vanilla |
+| Backend       | Python 3 · Flask 3.0                                                    |
+| Base de datos | SQLite 3 (file: `media_control.sqlite3`)                                |
+| Puerto        | `5070`                                                                  |
 
 ---
 
@@ -56,54 +56,54 @@ Abrir → `http://127.0.0.1:5070`
 
 ## API REST — Endpoints
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| `GET` | `/` | Página principal (SPA) |
-| `POST` | `/api/operators/register` | Registrar operador `{name, dni}` |
-| `GET` | `/api/media` | Listar medios (`?kind=audio\|video`) |
-| `POST` | `/api/media` | Añadir medio `{title, kind, sourceUrl, durationSeconds, genre}` |
-| `POST` | `/api/sessions/start` | Iniciar sesión `{operatorId, mediaItemId}` |
-| `POST` | `/api/sessions/event` | Registrar evento `{sessionId, eventType, position, payload}` |
-| `POST` | `/api/sessions/end` | Finalizar sesión `{sessionId, lastPosition, completed}` |
-| `GET` | `/api/operators/<id>/history` | Historial de sesiones (`?limit=8`) |
-| `GET` | `/api/leaderboard` | Top 10 operadores por sesiones/completados |
-| `GET` | `/api/stats` | KPIs globales |
-| `GET` | `/api/health` | Health check |
-| `POST` | `/api/seed` | *v2* — Generar datos demo |
-| `POST` | `/api/import` | *v2* — Importar medios desde JSON |
+| Método | Ruta                          | Descripción                                                     |
+| ------ | ----------------------------- | --------------------------------------------------------------- |
+| `GET`  | `/`                           | Página principal (SPA)                                          |
+| `POST` | `/api/operators/register`     | Registrar operador `{name, dni}`                                |
+| `GET`  | `/api/media`                  | Listar medios (`?kind=audio\|video`)                            |
+| `POST` | `/api/media`                  | Añadir medio `{title, kind, sourceUrl, durationSeconds, genre}` |
+| `POST` | `/api/sessions/start`         | Iniciar sesión `{operatorId, mediaItemId}`                      |
+| `POST` | `/api/sessions/event`         | Registrar evento `{sessionId, eventType, position, payload}`    |
+| `POST` | `/api/sessions/end`           | Finalizar sesión `{sessionId, lastPosition, completed}`         |
+| `GET`  | `/api/operators/<id>/history` | Historial de sesiones (`?limit=8`)                              |
+| `GET`  | `/api/leaderboard`            | Top 10 operadores por sesiones/completados                      |
+| `GET`  | `/api/stats`                  | KPIs globales                                                   |
+| `GET`  | `/api/health`                 | Health check                                                    |
+| `POST` | `/api/seed`                   | _v2_ — Generar datos demo                                       |
+| `POST` | `/api/import`                 | _v2_ — Importar medios desde JSON                               |
 
 ---
 
 ## Controles de teclado (v2)
 
-| Tecla | Acción |
-|-------|--------|
-| `Espacio` | Play / Pause |
-| `←` | Retroceder 5 s |
-| `→` | Avanzar 5 s |
-| `↑` | Subir volumen 5 % |
-| `↓` | Bajar volumen 5 % |
+| Tecla     | Acción            |
+| --------- | ----------------- |
+| `Espacio` | Play / Pause      |
+| `←`       | Retroceder 5 s    |
+| `→`       | Avanzar 5 s       |
+| `↑`       | Subir volumen 5 % |
+| `↓`       | Bajar volumen 5 % |
 
 ---
 
 ## 14 Mejoras Design System v2
 
-| # | Mejora | Archivos |
-|---|--------|----------|
-| 1 | **Custom Properties** — 30+ variables CSS (paleta, radios, sombras, tipografía) | `styles.css` |
-| 2 | **Tema claro / oscuro** — toggle persistente con `localStorage` | `styles.css`, `app.js`, `index.html` |
-| 3 | **LED de reproducción** — dot animado junto al título activo | `styles.css`, `app.js` |
-| 4 | **Barra de progreso custom** — `div` click-to-seek con relleno animado | `styles.css`, `app.js`, `index.html` |
-| 5 | **Badges de tipo** — etiquetas `audio` / `video` con color diferenciado | `styles.css`, `app.js` |
-| 6 | **Badges de completado** — ✔ Sí / ✘ No en historial | `styles.css`, `app.js` |
-| 7 | **Badges de ranking** — oro / plata / bronce en leaderboard | `styles.css`, `app.js` |
-| 8 | **Sistema de toasts** — notificaciones ok / info / warning / danger | `styles.css`, `app.js`, `index.html` |
-| 9 | **Atajos de teclado** — Space, flechas para control rápido | `app.js` |
-| 10 | **Seed de datos demo** — botón + endpoint `/api/seed` | `app.js`, `app.py`, `index.html` |
-| 11 | **Exportación JSON** — descarga Blob con medios y stats | `app.js`, `index.html` |
-| 12 | **Importación JSON** — carga fichero + endpoint `/api/import` | `app.js`, `app.py`, `index.html` |
-| 13 | **Animaciones CSS** — fadeIn, scaleIn, toastUp, pulse | `styles.css` |
-| 14 | **Responsive mejorado** — breakpoints 1024 px + 600 px | `styles.css` |
+| #   | Mejora                                                                          | Archivos                             |
+| --- | ------------------------------------------------------------------------------- | ------------------------------------ |
+| 1   | **Custom Properties** — 30+ variables CSS (paleta, radios, sombras, tipografía) | `styles.css`                         |
+| 2   | **Tema claro / oscuro** — toggle persistente con `localStorage`                 | `styles.css`, `app.js`, `index.html` |
+| 3   | **LED de reproducción** — dot animado junto al título activo                    | `styles.css`, `app.js`               |
+| 4   | **Barra de progreso custom** — `div` click-to-seek con relleno animado          | `styles.css`, `app.js`, `index.html` |
+| 5   | **Badges de tipo** — etiquetas `audio` / `video` con color diferenciado         | `styles.css`, `app.js`               |
+| 6   | **Badges de completado** — ✔ Sí / ✘ No en historial                             | `styles.css`, `app.js`               |
+| 7   | **Badges de ranking** — oro / plata / bronce en leaderboard                     | `styles.css`, `app.js`               |
+| 8   | **Sistema de toasts** — notificaciones ok / info / warning / danger             | `styles.css`, `app.js`, `index.html` |
+| 9   | **Atajos de teclado** — Space, flechas para control rápido                      | `app.js`                             |
+| 10  | **Seed de datos demo** — botón + endpoint `/api/seed`                           | `app.js`, `app.py`, `index.html`     |
+| 11  | **Exportación JSON** — descarga Blob con medios y stats                         | `app.js`, `index.html`               |
+| 12  | **Importación JSON** — carga fichero + endpoint `/api/import`                   | `app.js`, `app.py`, `index.html`     |
+| 13  | **Animaciones CSS** — fadeIn, scaleIn, toastUp, pulse                           | `styles.css`                         |
+| 14  | **Responsive mejorado** — breakpoints 1024 px + 600 px                          | `styles.css`                         |
 
 ---
 
@@ -129,9 +129,9 @@ Media-Control-Hub-PMDM-003/
 
 ## Autor
 
-| Campo | Valor |
-|-------|-------|
+| Campo  | Valor                       |
+| ------ | --------------------------- |
 | Nombre | Luis Jahir Rodríguez Cedeño |
-| DNI | 53945291X |
-| Ciclo | DAM2 · 2025/26 |
-| Módulo | PMDM · Actividad 003 |
+| DNI    | 53945291X                   |
+| Ciclo  | DAM2 · 2025/26              |
+| Módulo | PMDM · Actividad 003        |

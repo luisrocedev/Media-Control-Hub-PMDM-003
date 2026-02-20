@@ -7,37 +7,40 @@
 ## 1 · HTML5 Media API
 
 **Conceptos clave:**
+
 - `<video>` y `<audio>` — elementos nativos del navegador para reproducción multimedia.
 - Atributos principales: `src`, `controls`, `autoplay`, `loop`, `muted`, `preload`.
 - API JavaScript: `play()`, `pause()`, `load()`, `currentTime`, `duration`, `volume`, `playbackRate`, `paused`, `ended`.
 - Eventos clave: `timeupdate`, `play`, `pause`, `ended`, `loadedmetadata`, `error`.
 
 **Snippet — reproductor custom:**
+
 ```javascript
-const player = document.getElementById('videoPlayer');
+const player = document.getElementById("videoPlayer");
 
 // Controles
-await player.play();         // Reproducir
-player.pause();              // Pausar
-player.currentTime = 0;      // Rebobinar
-player.currentTime += 10;    // Adelantar 10 s
-player.volume = 0.8;         // Volumen 80 %
-player.playbackRate = 1.5;   // Velocidad 1.5×
+await player.play(); // Reproducir
+player.pause(); // Pausar
+player.currentTime = 0; // Rebobinar
+player.currentTime += 10; // Adelantar 10 s
+player.volume = 0.8; // Volumen 80 %
+player.playbackRate = 1.5; // Velocidad 1.5×
 
 // Progreso
-player.addEventListener('timeupdate', () => {
+player.addEventListener("timeupdate", () => {
   const pct = (player.currentTime / player.duration) * 100;
   progressFill.style.width = `${pct}%`;
   timeInfo.textContent = `${fmt(player.currentTime)} / ${fmt(player.duration)}`;
 });
 
 // Detección de fin
-player.addEventListener('ended', () => {
-  console.log('Reproducción completada');
+player.addEventListener("ended", () => {
+  console.log("Reproducción completada");
 });
 ```
 
 **Diferencia `<video>` vs `<audio>`:**
+
 - Misma API JavaScript; la diferencia es visual (video muestra fotogramas).
 - Se puede switchar con `display: none/block` según `item.kind`.
 
@@ -48,7 +51,8 @@ player.addEventListener('ended', () => {
 **Patrón:** ocultar controles nativos, crear botones propios y conectar vía JS.
 
 ```html
-<video id="videoPlayer"></video>   <!-- sin atributo controls -->
+<video id="videoPlayer"></video>
+<!-- sin atributo controls -->
 
 <div class="controls">
   <button id="btnPlay">▶</button>
@@ -61,13 +65,14 @@ player.addEventListener('ended', () => {
     <option value="1" selected>1×</option>
     <option value="2">2×</option>
   </select>
-  <input type="range" id="volume" min="0" max="1" step="0.01" value="1">
+  <input type="range" id="volume" min="0" max="1" step="0.01" value="1" />
 </div>
 ```
 
 **Barra de progreso custom (click-to-seek con div):**
+
 ```javascript
-progressBar.addEventListener('click', (e) => {
+progressBar.addEventListener("click", (e) => {
   const rect = progressBar.getBoundingClientRect();
   const pct = (e.clientX - rect.left) / rect.width;
   player.currentTime = pct * player.duration;
@@ -122,6 +127,7 @@ CREATE TABLE playback_events (
 ```
 
 **Patrón de endpoint Flask:**
+
 ```python
 @app.post("/api/sessions/event")
 def log_event():
@@ -143,6 +149,7 @@ def log_event():
 ```
 
 **Patrón de conexión SQLite:**
+
 ```python
 def get_db():
     conn = sqlite3.connect(DB_PATH)
@@ -155,6 +162,7 @@ def get_db():
 ## 4 · Telemetría de eventos
 
 **Flujo completo:**
+
 1. **Registro de operador** → `POST /api/operators/register` → obtiene `operatorId`.
 2. **Cargar medio** → `POST /api/sessions/start` → obtiene `sessionId`.
 3. **Cada interacción** → `POST /api/sessions/event` con `{sessionId, eventType, position, payload}`.
@@ -196,6 +204,7 @@ LIMIT 10
 ```
 
 **Puntos clave:**
+
 - `LEFT JOIN` para incluir operadores sin sesiones.
 - `COALESCE` evita `NULL` en agregaciones vacías.
 - `GROUP BY` agrupa por operador para contar sesiones.
@@ -206,14 +215,15 @@ LIMIT 10
 
 ```javascript
 const state = {
-  operatorId: null,     // ID del operador activo
-  operatorName: "",     // Nombre mostrado
-  currentMedia: null,   // Objeto {id, title, kind, source_url, ...}
-  currentSessionId: null // Sesión de reproducción activa
+  operatorId: null, // ID del operador activo
+  operatorName: "", // Nombre mostrado
+  currentMedia: null, // Objeto {id, title, kind, source_url, ...}
+  currentSessionId: null, // Sesión de reproducción activa
 };
 ```
 
 **Patrón `activePlayer()`:**
+
 ```javascript
 function activePlayer() {
   return state.currentMedia?.kind === "audio" ? el.audio : el.video;
@@ -221,6 +231,7 @@ function activePlayer() {
 ```
 
 **Switch visual audio/video:**
+
 ```javascript
 function switchTo(kind) {
   if (kind === "audio") {
@@ -239,64 +250,85 @@ function switchTo(kind) {
 
 ## 7 · 14 Mejoras Design System v2
 
-| # | Mejora | Palabra clave |
-|---|--------|---------------|
-| 1 | Custom Properties | `--clr-primary`, `:root`, CSS variables |
-| 2 | Tema claro/oscuro | `html.light`, `localStorage`, `.theme-toggle` |
-| 3 | LED de reproducción | `.playing-dot`, `@keyframes pulse`, `classList.toggle` |
-| 4 | Barra progreso custom | `.progress-bar`, `getBoundingClientRect()`, click-to-seek |
-| 5 | Badges de tipo | `.badge-kind.audio`, `.badge-kind.video` |
-| 6 | Badges completado | `.badge-completed.yes`, `.badge-completed.no` |
-| 7 | Badges ranking | `.rank-badge.gold/.silver/.bronze` |
-| 8 | Toasts | `showToast(msg, type)`, `animationend`, auto-remove |
-| 9 | Atajos teclado | `document.addEventListener('keydown')`, `e.code` |
-| 10 | Seed datos | `POST /api/seed`, `random.choice`, sesiones demo |
-| 11 | Exportar JSON | `Blob`, `URL.createObjectURL`, `a.download` |
-| 12 | Importar JSON | `file.text()`, `JSON.parse`, `POST /api/import` |
-| 13 | Animaciones CSS | `@keyframes fadeIn/scaleIn/toastUp/pulse` |
-| 14 | Responsive | `@media (max-width: 1024px)`, `(max-width: 600px)` |
+| #   | Mejora                | Palabra clave                                             |
+| --- | --------------------- | --------------------------------------------------------- |
+| 1   | Custom Properties     | `--clr-primary`, `:root`, CSS variables                   |
+| 2   | Tema claro/oscuro     | `html.light`, `localStorage`, `.theme-toggle`             |
+| 3   | LED de reproducción   | `.playing-dot`, `@keyframes pulse`, `classList.toggle`    |
+| 4   | Barra progreso custom | `.progress-bar`, `getBoundingClientRect()`, click-to-seek |
+| 5   | Badges de tipo        | `.badge-kind.audio`, `.badge-kind.video`                  |
+| 6   | Badges completado     | `.badge-completed.yes`, `.badge-completed.no`             |
+| 7   | Badges ranking        | `.rank-badge.gold/.silver/.bronze`                        |
+| 8   | Toasts                | `showToast(msg, type)`, `animationend`, auto-remove       |
+| 9   | Atajos teclado        | `document.addEventListener('keydown')`, `e.code`          |
+| 10  | Seed datos            | `POST /api/seed`, `random.choice`, sesiones demo          |
+| 11  | Exportar JSON         | `Blob`, `URL.createObjectURL`, `a.download`               |
+| 12  | Importar JSON         | `file.text()`, `JSON.parse`, `POST /api/import`           |
+| 13  | Animaciones CSS       | `@keyframes fadeIn/scaleIn/toastUp/pulse`                 |
+| 14  | Responsive            | `@media (max-width: 1024px)`, `(max-width: 600px)`        |
 
 ---
 
 ## 8 · Snippets rápidos para el examen
 
 **Toast system:**
+
 ```javascript
-function showToast(msg, type = 'info') {
-  const t = document.createElement('div');
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
   t.className = `toast ${type}`;
   t.textContent = msg;
   toastBox.appendChild(t);
-  t.addEventListener('animationend', () => t.remove());
+  t.addEventListener("animationend", () => t.remove());
 }
 ```
 
 **Theme toggle con localStorage:**
+
 ```javascript
 function toggleTheme() {
-  const isLight = document.documentElement.classList.toggle('light');
-  localStorage.setItem('mch-theme', isLight ? 'light' : 'dark');
+  const isLight = document.documentElement.classList.toggle("light");
+  localStorage.setItem("mch-theme", isLight ? "light" : "dark");
 }
 ```
 
 **Keyboard shortcuts:**
+
 ```javascript
-document.addEventListener('keydown', (e) => {
-  if (['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+document.addEventListener("keydown", (e) => {
+  if (["INPUT", "SELECT", "TEXTAREA"].includes(e.target.tagName)) return;
   switch (e.code) {
-    case 'Space':   e.preventDefault(); player.paused ? player.play() : player.pause(); break;
-    case 'ArrowLeft':  e.preventDefault(); player.currentTime -= 5; break;
-    case 'ArrowRight': e.preventDefault(); player.currentTime += 5; break;
-    case 'ArrowUp':    e.preventDefault(); player.volume = Math.min(1, player.volume + 0.05); break;
-    case 'ArrowDown':  e.preventDefault(); player.volume = Math.max(0, player.volume - 0.05); break;
+    case "Space":
+      e.preventDefault();
+      player.paused ? player.play() : player.pause();
+      break;
+    case "ArrowLeft":
+      e.preventDefault();
+      player.currentTime -= 5;
+      break;
+    case "ArrowRight":
+      e.preventDefault();
+      player.currentTime += 5;
+      break;
+    case "ArrowUp":
+      e.preventDefault();
+      player.volume = Math.min(1, player.volume + 0.05);
+      break;
+    case "ArrowDown":
+      e.preventDefault();
+      player.volume = Math.max(0, player.volume - 0.05);
+      break;
   }
 });
 ```
 
 **Export con Blob:**
+
 ```javascript
-const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-const a = document.createElement('a');
+const blob = new Blob([JSON.stringify(data, null, 2)], {
+  type: "application/json",
+});
+const a = document.createElement("a");
 a.href = URL.createObjectURL(blob);
 a.download = `export-${Date.now()}.json`;
 a.click();
@@ -304,14 +336,16 @@ URL.revokeObjectURL(a.href);
 ```
 
 **Import con FileReader:**
+
 ```javascript
 const file = inputEl.files[0];
 const text = await file.text();
 const json = JSON.parse(text);
-await api('/api/import', { method: 'POST', body: JSON.stringify(json) });
+await api("/api/import", { method: "POST", body: JSON.stringify(json) });
 ```
 
 **Seed endpoint Flask:**
+
 ```python
 @app.post("/api/seed")
 def seed_demo():

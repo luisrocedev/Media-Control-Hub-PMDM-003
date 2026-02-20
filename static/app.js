@@ -35,6 +35,12 @@ const el = {
   exportBtn: document.getElementById("exportBtn"),
   importBtn: document.getElementById("importBtn"),
   importFile: document.getElementById("importFile"),
+  /* upload refs */
+  uploadZone: document.getElementById("uploadZone"),
+  uploadInput: document.getElementById("uploadInput"),
+  uploadProgress: document.getElementById("uploadProgress"),
+  uploadBar: document.getElementById("uploadBar"),
+  uploadStatus: document.getElementById("uploadStatus"),
 };
 
 function activePlayer() {
@@ -481,6 +487,101 @@ function wireEvents() {
 
 /* ─── v2 Data functions ─── */
 
+/* ── File upload from local computer ── */
+
+function uploadFile(file) {
+  return new Promise((resolve, reject) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("title", file.name.replace(/\.[^.]+$/, ""));
+    formData.append("genre", "Local");
+
+    const xhr = new XMLHttpRequest();
+
+    el.uploadProgress.style.display = "";
+    el.uploadBar.style.width = "0%";
+    el.uploadStatus.textContent = `Subiendo ${file.name}...`;
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        el.uploadBar.style.width = `${pct}%`;
+        el.uploadStatus.textContent = `Subiendo ${file.name}... ${pct}%`;
+      }
+    });
+
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        const data = JSON.parse(xhr.responseText);
+        if (data.ok) {
+          showToast(`✅ ${data.title} (${data.kind}) subido`, "ok");
+          resolve(data);
+        } else {
+          showToast(`❌ ${data.error}`, "danger");
+          reject(new Error(data.error));
+        }
+      } else {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          showToast(`❌ ${data.error || "Error de subida"}`, "danger");
+        } catch (_) {
+          showToast("❌ Error de subida", "danger");
+        }
+        reject(new Error("Upload failed"));
+      }
+    });
+
+    xhr.addEventListener("error", () => {
+      showToast("❌ Error de red al subir", "danger");
+      reject(new Error("Network error"));
+    });
+
+    xhr.open("POST", "/api/upload");
+    xhr.send(formData);
+  });
+}
+
+async function handleFiles(files) {
+  for (const file of files) {
+    try {
+      await uploadFile(file);
+    } catch (_) { /* toast already shown */ }
+  }
+  el.uploadProgress.style.display = "none";
+  await refreshLibrary();
+  await refreshStats();
+}
+
+function wireUpload() {
+  // Click to select
+  el.uploadInput.addEventListener("change", () => {
+    if (el.uploadInput.files.length) {
+      handleFiles(el.uploadInput.files);
+      el.uploadInput.value = "";
+    }
+  });
+
+  // Drag & drop
+  el.uploadZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    el.uploadZone.classList.add("drag-over");
+  });
+  el.uploadZone.addEventListener("dragleave", () => {
+    el.uploadZone.classList.remove("drag-over");
+  });
+  el.uploadZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    el.uploadZone.classList.remove("drag-over");
+    if (e.dataTransfer.files.length) {
+      handleFiles(e.dataTransfer.files);
+    }
+  });
+  // Click anywhere on zone opens picker
+  el.uploadZone.addEventListener("click", (e) => {
+    if (e.target.tagName !== 'LABEL') el.uploadInput.click();
+  });
+}
+
 async function seedData() {
   await api('/api/seed', { method: 'POST' });
   showToast('🌱 Datos demo generados', 'ok');
@@ -520,6 +621,7 @@ async function importData() {
 async function boot() {
   initTheme();
   wireEvents();
+  wireUpload();
   await refreshLibrary();
   await refreshStats();
   await refreshLeaders();

@@ -1,15 +1,26 @@
 import json
+import os
 import random
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from uuid import uuid4
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "media_control.sqlite3"
+UPLOAD_DIR = BASE_DIR / "static" / "uploads"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {
+    "mp3", "wav", "ogg", "flac", "aac", "m4a", "wma",
+    "mp4", "webm", "mkv", "avi", "mov", "ogv",
+}
+MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = MAX_FILE_SIZE
 
 
 def now_iso() -> str:
@@ -284,6 +295,52 @@ def stats():
 @app.get("/api/health")
 def health():
     return jsonify({"ok": True, "db": DB_PATH.name, "utc": now_iso()})
+
+
+# ─── File upload ───
+
+
+def _allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def _detect_kind(filename: str) -> str:
+    ext = filename.rsplit(".", 1)[1].lower()
+    audio_exts = {"mp3", "wav", "ogg", "flac", "aac", "m4a", "wma"}
+    return "audio" if ext in audio_exts else "video"
+
+
+@app.post("/api/upload")
+def upload_file():
+    """Accept a local audio/video file, save it to static/uploads and register in DB."""
+    if "file" not in request.files:
+        return jsonify({"ok": False, "error": "No se envió ningún archivo."}), 400
+
+    file = request.files["file"]
+    if not file or not file.filename:
+        return jsonify({"ok": False, "error": "Archivo vacío."}), 400
+
+    if not _allowed_file(file.filename):
+        return jsonify({"ok": False, "error": f"Extensión no permitida. Usa: {', '.join(sorted(ALLOWED_EXTENSIONS))}"}), 400
+
+    ext = file.filename.rsplit(".", 1)[1].lower()
+    safe_name = f"{uuid4().hex[:12]}.{ext}"
+    dest = UPLOAD_DIR / safe_name
+    file.save(str(dest))
+
+    kind = _detect_kind(file.filename)
+    title = request.form.get("title", "").strip() or file.filename.rsplit(".", 1)[0]
+    genre = request.form.get("genre", "").strip() or "Local"
+    duration = int(request.form.get("durationSeconds", 0) or 0)
+    source_url = f"/static/uploads/{safe_name}"
+
+    with get_db() as conn:
+        cur = conn.execute(
+            "INSERT INTO media_items (title, kind, source_url, duration_seconds, genre, created_at) VALUES (?,?,?,?,?,?)",
+            (title, kind, source_url, duration, genre, now_iso()),
+        )
+
+    return jsonify({"ok": True, "mediaId": cur.lastrowid, "title": title, "kind": kind, "url": source_url})
 
 
 # ─── v2 endpoints ───

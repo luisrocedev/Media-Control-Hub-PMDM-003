@@ -375,6 +375,58 @@ kbd {
   0%, 100% { opacity: 1; } 50% { opacity: 0.5; }
 }
 
+/* ─── Upload zone ─── */
+.upload-zone {
+  margin: 10px 0;
+  border: 2px dashed var(--line);
+  border-radius: var(--r-md);
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--t-normal), background var(--t-normal);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+.upload-icon { font-size: 2rem; margin-bottom: 6px; }
+.upload-label {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  font-weight: 600;
+}
+.upload-hint {
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  margin-top: 4px;
+}
+.upload-progress {
+  margin: 8px 0;
+  background: rgba(255,255,255,0.06);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  height: 28px;
+  position: relative;
+}
+.upload-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 0.3s;
+  border-radius: var(--r-sm);
+}
+.upload-progress span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text);
+}
+
 /* ─── Responsive ─── */
 @media (max-width: 1024px) {
   .layout {

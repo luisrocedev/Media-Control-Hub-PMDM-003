@@ -65,8 +65,19 @@
           <input name="sourceUrl" type="url" placeholder="URL fuente" required />
           <input name="durationSeconds" type="number" min="0" placeholder="Duración (s)" />
           <input name="genre" type="text" placeholder="Género" />
-          <button type="submit">Añadir medio</button>
+          <button type="submit">Añadir por URL</button>
         </form>
+
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">📁</div>
+          <p>Arrastra archivos aquí o <label for="uploadInput" class="upload-label">selecciona desde tu ordenador</label></p>
+          <p class="upload-hint">MP3 · WAV · OGG · FLAC · MP4 · WEBM · MOV (máx. 100 MB)</p>
+          <input type="file" id="uploadInput" accept="audio/*,video/*" multiple hidden />
+        </div>
+        <div id="uploadProgress" class="upload-progress" style="display:none">
+          <div class="upload-bar" id="uploadBar"></div>
+          <span id="uploadStatus">Subiendo...</span>
+        </div>
 
         <div id="library"></div>
 

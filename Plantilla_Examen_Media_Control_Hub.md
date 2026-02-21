@@ -1,4 +1,5 @@
 # 📝 Plantilla Examen PMDM — Media Control Hub
+
 ## Actividad 003 · Reproductor Multimedia Personalizado
 
 **Alumno:** Luis Jahir Rodriguez Cedeño
@@ -35,17 +36,17 @@ Media Control Hub es un reproductor multimedia web con controles personalizados 
 const player = document.getElementById("videoPlayer");
 
 // Propiedades principales
-player.currentTime   // Posición actual en segundos
-player.duration      // Duración total del medio
-player.volume        // Volumen (0.0 a 1.0)
-player.playbackRate  // Velocidad (0.5x, 1x, 1.5x, 2x)
-player.paused        // Boolean: ¿está pausado?
-player.ended         // Boolean: ¿terminó?
+player.currentTime; // Posición actual en segundos
+player.duration; // Duración total del medio
+player.volume; // Volumen (0.0 a 1.0)
+player.playbackRate; // Velocidad (0.5x, 1x, 1.5x, 2x)
+player.paused; // Boolean: ¿está pausado?
+player.ended; // Boolean: ¿terminó?
 
 // Métodos
 await player.play(); // Reproducir (devuelve Promise)
-player.pause();      // Pausar
-player.load();       // Recargar fuente
+player.pause(); // Pausar
+player.load(); // Recargar fuente
 ```
 
 **Explicación:** Todas las propiedades y métodos son iguales para `<video>` y `<audio>`. La diferencia es solo visual: video muestra fotogramas, audio no. Por eso podemos alternar entre ambos con `display: none/block`.
@@ -54,12 +55,12 @@ player.load();       // Recargar fuente
 
 ```javascript
 // Los 6 eventos principales que capturamos:
-player.addEventListener("play", () => {});       // Se inicia reproducción
-player.addEventListener("pause", () => {});      // Se pausa
-player.addEventListener("ended", () => {});      // Llegó al final
+player.addEventListener("play", () => {}); // Se inicia reproducción
+player.addEventListener("pause", () => {}); // Se pausa
+player.addEventListener("ended", () => {}); // Llegó al final
 player.addEventListener("timeupdate", () => {}); // Progreso (~4 veces/segundo)
 player.addEventListener("volumechange", () => {}); // Cambio de volumen
-player.addEventListener("seeked", () => {});     // Usuario saltó a otro punto
+player.addEventListener("seeked", () => {}); // Usuario saltó a otro punto
 ```
 
 **Explicación:** Estos eventos son la base del tracking. `timeupdate` se dispara constantemente (~250ms) y lo usamos para actualizar la barra de progreso. `ended` lo usamos para marcar la sesión como completada.
@@ -73,33 +74,33 @@ player.addEventListener("seeked", () => {});     // Usuario saltó a otro punto
 ```javascript
 async function play() {
   if (!state.currentMedia) {
-    showToast('⚠️ Carga un medio primero', 'warning');
+    showToast("⚠️ Carga un medio primero", "warning");
     return;
   }
   const player = activePlayer();
   await player.play();
-  setPlayingDot(true);  // Activa el LED verde
+  setPlayingDot(true); // Activa el LED verde
   await pushEvent("play", { rate: player.playbackRate, volume: player.volume });
-  showToast('▶ Reproduciendo', 'ok');
+  showToast("▶ Reproduciendo", "ok");
 }
 
 async function pause() {
   const player = activePlayer();
   player.pause();
-  setPlayingDot(false);  // Desactiva el LED
+  setPlayingDot(false); // Desactiva el LED
   await pushEvent("pause", {});
-  showToast('⏸ Pausado', 'info');
+  showToast("⏸ Pausado", "info");
 }
 
 async function stop() {
   const player = activePlayer();
   player.pause();
-  player.currentTime = 0;  // Vuelve al inicio
+  player.currentTime = 0; // Vuelve al inicio
   setPlayingDot(false);
-  el.progressFill.style.width = '0%';
+  el.progressFill.style.width = "0%";
   await pushEvent("stop", {});
-  await endSession(false);  // Cierra la sesión (no completada)
-  showToast('⏹ Detenido', 'info');
+  await endSession(false); // Cierra la sesión (no completada)
+  showToast("⏹ Detenido", "info");
 }
 ```
 
@@ -170,6 +171,7 @@ el.progressBar.addEventListener("click", async (e) => {
 **Explicación:** Usamos un `<div>` en lugar de `<input type="range">` para control total del estilo. `getBoundingClientRect()` nos da la posición del div en pantalla et calculamos el porcentaje de clic relativo al ancho total.
 
 **HTML de la barra:**
+
 ```html
 <div class="progress-bar" id="progressBar">
   <div class="progress-fill" id="progressFill"></div>
@@ -177,11 +179,12 @@ el.progressBar.addEventListener("click", async (e) => {
 ```
 
 **CSS de la barra:**
+
 ```css
 .progress-bar {
   width: 100%;
   height: 8px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
   cursor: pointer;
   overflow: hidden;
@@ -320,6 +323,7 @@ LIMIT 10
 ```
 
 **Explicación:**
+
 - `LEFT JOIN` incluye operadores SIN sesiones (aparecen con 0)
 - `COALESCE(SUM(...), 0)` evita NULL cuando no hay datos
 - `GROUP BY` agrupa filas por operador para las funciones de agregación
@@ -375,6 +379,7 @@ def upload_file():
 ```
 
 **Explicación:**
+
 - `request.files["file"]` accede al archivo del formulario multipart
 - `uuid4().hex[:12]` genera nombre único seguro para evitar colisiones y path traversal
 - `_detect_kind()` detecta automáticamente si es audio o vídeo por la extensión
@@ -408,12 +413,13 @@ function uploadFile(file) {
     });
 
     xhr.open("POST", "/api/upload");
-    xhr.send(formData);  // Envía como multipart/form-data
+    xhr.send(formData); // Envía como multipart/form-data
   });
 }
 ```
 
 **Explicación:**
+
 - Usamos `XMLHttpRequest` en vez de `fetch()` porque XHR permite `xhr.upload.addEventListener("progress")` para tracking de progreso en tiempo real
 - `FormData` construye automáticamente el body `multipart/form-data`
 - `e.loaded / e.total` calcula el porcentaje de bytes subidos
@@ -425,7 +431,7 @@ function uploadFile(file) {
 ```javascript
 // Arrastra archivos sobre la zona
 uploadZone.addEventListener("dragover", (e) => {
-  e.preventDefault();  // NECESARIO para que funcione drop
+  e.preventDefault(); // NECESARIO para que funcione drop
   uploadZone.classList.add("drag-over");
 });
 
@@ -434,15 +440,16 @@ uploadZone.addEventListener("dragleave", () => {
 });
 
 uploadZone.addEventListener("drop", (e) => {
-  e.preventDefault();  // NECESARIO  
+  e.preventDefault(); // NECESARIO
   uploadZone.classList.remove("drag-over");
   if (e.dataTransfer.files.length) {
-    handleFiles(e.dataTransfer.files);  // FileList
+    handleFiles(e.dataTransfer.files); // FileList
   }
 });
 ```
 
 **Explicación:**
+
 - `e.preventDefault()` en `dragover` es **obligatorio** — sin él, el navegador no permite el drop
 - `e.dataTransfer.files` contiene un `FileList` con los archivos arrastrados
 - La clase CSS `drag-over` resalta visualmente la zona cuando se arrastra encima
@@ -484,9 +491,9 @@ async function pushEvent(eventType, payload = {}) {
 
 ```javascript
 const state = {
-  operatorId: null,       // ID del operador registrado
-  operatorName: "",       // Nombre del operador
-  currentMedia: null,     // Objeto {id, title, kind, source_url, ...}
+  operatorId: null, // ID del operador registrado
+  operatorName: "", // Nombre del operador
+  currentMedia: null, // Objeto {id, title, kind, source_url, ...}
   currentSessionId: null, // Sesión de reproducción activa
 };
 ```
@@ -497,22 +504,22 @@ const state = {
 
 ## 8. Las 14 mejoras — Resumen rápido
 
-| # | Mejora | Snippet clave |
-|---|--------|---------------|
-| 1 | Custom Properties | `--accent: #4de2c4;` en `:root` |
-| 2 | Tema claro/oscuro | `html.light { --bg: #f0f2f5; }` + `localStorage` |
-| 3 | LED reproducción | `.playing-dot.active { animation: pulse 1.2s infinite; }` |
-| 4 | Barra progreso | `getBoundingClientRect()` + click-to-seek |
-| 5 | Badges tipo | `.badge-kind.audio { color: var(--info); }` |
-| 6 | Badges completado | `.badge-completed.yes / .no` con colores |
-| 7 | Badges ranking | `.rank-badge.gold { background: var(--gold); }` |
-| 8 | Toasts | `showToast(msg, type)` + `animationend` auto-remove |
-| 9 | Atajos teclado | `e.code === 'Space'` + `preventDefault()` |
-| 10 | Seed datos | `POST /api/seed` + operadores demo |
-| 11 | Exportar JSON | `new Blob([JSON.stringify(data)])` + `createObjectURL` |
-| 12 | Importar JSON | `file.text()` + `JSON.parse()` + `POST /api/import` |
-| 13 | Animaciones | `@keyframes fadeIn/scaleIn/toastUp/pulse` |
-| 14 | Responsive | `@media (max-width: 1024px)` + `(600px)` |
+| #   | Mejora            | Snippet clave                                             |
+| --- | ----------------- | --------------------------------------------------------- |
+| 1   | Custom Properties | `--accent: #4de2c4;` en `:root`                           |
+| 2   | Tema claro/oscuro | `html.light { --bg: #f0f2f5; }` + `localStorage`          |
+| 3   | LED reproducción  | `.playing-dot.active { animation: pulse 1.2s infinite; }` |
+| 4   | Barra progreso    | `getBoundingClientRect()` + click-to-seek                 |
+| 5   | Badges tipo       | `.badge-kind.audio { color: var(--info); }`               |
+| 6   | Badges completado | `.badge-completed.yes / .no` con colores                  |
+| 7   | Badges ranking    | `.rank-badge.gold { background: var(--gold); }`           |
+| 8   | Toasts            | `showToast(msg, type)` + `animationend` auto-remove       |
+| 9   | Atajos teclado    | `e.code === 'Space'` + `preventDefault()`                 |
+| 10  | Seed datos        | `POST /api/seed` + operadores demo                        |
+| 11  | Exportar JSON     | `new Blob([JSON.stringify(data)])` + `createObjectURL`    |
+| 12  | Importar JSON     | `file.text()` + `JSON.parse()` + `POST /api/import`       |
+| 13  | Animaciones       | `@keyframes fadeIn/scaleIn/toastUp/pulse`                 |
+| 14  | Responsive        | `@media (max-width: 1024px)` + `(600px)`                  |
 
 ---
 
@@ -521,23 +528,36 @@ const state = {
 ### 9.1 Toast system con animación CSS
 
 ```javascript
-function showToast(msg, type = 'info') {
-  const t = document.createElement('div');
+function showToast(msg, type = "info") {
+  const t = document.createElement("div");
   t.className = `toast ${type}`;
   t.textContent = msg;
   el.toastBox.appendChild(t);
-  t.addEventListener('animationend', () => t.remove());
+  t.addEventListener("animationend", () => t.remove());
 }
 ```
 
 ```css
-.toast { animation: toastUp 2.8s var(--ease) forwards; }
+.toast {
+  animation: toastUp 2.8s var(--ease) forwards;
+}
 
 @keyframes toastUp {
-  0%   { opacity: 0; transform: translateY(16px); }
-  12%  { opacity: 1; transform: translateY(0); }
-  80%  { opacity: 1; }
-  100% { opacity: 0; transform: translateY(-12px); }
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  12% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
 }
 ```
 
@@ -547,23 +567,29 @@ function showToast(msg, type = 'info') {
 
 ```javascript
 function initTheme() {
-  const saved = localStorage.getItem('mch-theme');
-  if (saved === 'light') {
-    document.documentElement.classList.add('light');
-    el.themeToggle.textContent = '☀️';
+  const saved = localStorage.getItem("mch-theme");
+  if (saved === "light") {
+    document.documentElement.classList.add("light");
+    el.themeToggle.textContent = "☀️";
   }
 }
 
 function toggleTheme() {
-  const isLight = document.documentElement.classList.toggle('light');
-  localStorage.setItem('mch-theme', isLight ? 'light' : 'dark');
-  el.themeToggle.textContent = isLight ? '☀️' : '🌙';
+  const isLight = document.documentElement.classList.toggle("light");
+  localStorage.setItem("mch-theme", isLight ? "light" : "dark");
+  el.themeToggle.textContent = isLight ? "☀️" : "🌙";
 }
 ```
 
 ```css
-:root { --bg: #0f1222; --text: #e7ebff; }
-html.light { --bg: #f0f2f5; --text: #1a1a2e; }
+:root {
+  --bg: #0f1222;
+  --text: #e7ebff;
+}
+html.light {
+  --bg: #f0f2f5;
+  --text: #1a1a2e;
+}
 ```
 
 **Explicación:** Añadimos la clase `light` al `<html>`. Las CSS custom properties se sobreescriben automáticamente para todo el documento. `localStorage` persiste la preferencia entre recargas.
@@ -573,30 +599,35 @@ html.light { --bg: #f0f2f5; --text: #1a1a2e; }
 ```javascript
 document.addEventListener("keydown", (e) => {
   // Ignorar cuando hay un input en foco
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-  
+  if (
+    e.target.tagName === "INPUT" ||
+    e.target.tagName === "SELECT" ||
+    e.target.tagName === "TEXTAREA"
+  )
+    return;
+
   switch (e.code) {
-    case 'Space':
-      e.preventDefault();  // Evita scroll de página
+    case "Space":
+      e.preventDefault(); // Evita scroll de página
       activePlayer().paused ? play() : pause();
       break;
-    case 'ArrowLeft':
+    case "ArrowLeft":
       e.preventDefault();
       skip(-5);
       break;
-    case 'ArrowRight':
+    case "ArrowRight":
       e.preventDefault();
       skip(5);
       break;
-    case 'ArrowUp':
+    case "ArrowUp":
       e.preventDefault();
       el.volume.value = Math.min(1, Number(el.volume.value) + 0.05).toFixed(2);
-      el.volume.dispatchEvent(new Event('input'));
+      el.volume.dispatchEvent(new Event("input"));
       break;
-    case 'ArrowDown':
+    case "ArrowDown":
       e.preventDefault();
       el.volume.value = Math.max(0, Number(el.volume.value) - 0.05).toFixed(2);
-      el.volume.dispatchEvent(new Event('input'));
+      el.volume.dispatchEvent(new Event("input"));
       break;
   }
 });
@@ -608,17 +639,17 @@ document.addEventListener("keydown", (e) => {
 
 ```javascript
 async function exportData() {
-  const data = await api('/api/stats');
-  const media = await api('/api/media');
+  const data = await api("/api/stats");
+  const media = await api("/api/media");
   const blob = new Blob(
     [JSON.stringify({ stats: data.stats, media: media.items }, null, 2)],
-    { type: 'application/json' }
+    { type: "application/json" },
   );
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = `export-${Date.now()}.json`;
   a.click();
-  URL.revokeObjectURL(a.href);  // Liberar memoria
+  URL.revokeObjectURL(a.href); // Liberar memoria
 }
 ```
 
@@ -630,11 +661,14 @@ async function exportData() {
 async function importData() {
   const file = el.importFile.files[0];
   if (!file) return;
-  const text = await file.text();    // Lee el archivo como texto
-  const json = JSON.parse(text);     // Parsea el JSON
+  const text = await file.text(); // Lee el archivo como texto
+  const json = JSON.parse(text); // Parsea el JSON
   if (json.media && Array.isArray(json.media)) {
-    await api('/api/import', { method: 'POST', body: JSON.stringify({ media: json.media }) });
-    showToast(`📤 ${json.media.length} medios importados`, 'ok');
+    await api("/api/import", {
+      method: "POST",
+      body: JSON.stringify({ media: json.media }),
+    });
+    showToast(`📤 ${json.media.length} medios importados`, "ok");
   }
 }
 ```
@@ -669,13 +703,14 @@ def seed_demo():
 
 ```javascript
 function setPlayingDot(active) {
-  el.playingDot.classList.toggle('active', active);
+  el.playingDot.classList.toggle("active", active);
 }
 ```
 
 ```css
 .playing-dot {
-  width: 10px; height: 10px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: var(--muted);
 }
@@ -684,8 +719,13 @@ function setPlayingDot(active) {
   animation: pulse 1.2s infinite;
 }
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 ```
 
@@ -751,5 +791,5 @@ R: `navigator.sendBeacon()` envía datos de forma asíncrona sin bloquear el cie
 
 ---
 
-*Documento generado para el examen de PMDM — Media Control Hub*
-*Luis Jahir Rodriguez Cedeño · 53945291X · DAM2 2025/26*
+_Documento generado para el examen de PMDM — Media Control Hub_
+_Luis Jahir Rodriguez Cedeño · 53945291X · DAM2 2025/26_
